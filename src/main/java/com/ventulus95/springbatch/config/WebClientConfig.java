@@ -28,7 +28,7 @@ public class WebClientConfig {
                             }
                         })
                 ))
-                .baseUrl("https://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice")
+                .baseUrl("https://www.kobis.or.kr/kobisopenapi/webservice/rest")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
