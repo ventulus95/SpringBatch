@@ -1,5 +1,6 @@
 package com.ventulus95.springbatch;
 
+import com.ventulus95.springbatch.dto.kobisResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +18,11 @@ public class TestController {
     private final WebClient webClient;
 
     @GetMapping("/test")
-    public String test(){
-        ResponseEntity<Object> obj = webClient.get().uri("/searchDailyBoxOfficeList.json?key=0845e868204bfaa50d9b393c2dd5c499&&targetDt=20211206").retrieve().toEntity(Object.class).block();
+    public ResponseEntity<kobisResponse> test(){
+        ResponseEntity<kobisResponse> obj = webClient.get().uri("/boxoffice/searchDailyBoxOfficeList.json?key=0845e868204bfaa50d9b393c2dd5c499&&targetDt=20211206")
+                .retrieve().toEntity(kobisResponse.class)
+                .block();
         logger.info("이거 값은? >>>> {}", obj.getBody());
-        return "Test";
+        return obj;
     }
 }
