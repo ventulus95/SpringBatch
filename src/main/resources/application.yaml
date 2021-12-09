@@ -15,6 +15,14 @@ spring:
   batch:
     jdbc:
       initialize-schema: embedded
+    job:
+      enabled: false
+
+  quartz:
+    jdbc:
+      initialize-schema: embedded
+    job-store-type: jdbc
+
 
 
 logging.level:
