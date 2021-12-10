@@ -39,7 +39,6 @@ public class ScheduledJob extends QuartzJobBean {
                     .toJobParameters();
 
             logger.info("job은 뭐고... :{}, ",(String) map.get("job"));
-            logger.info("JobDataMap은 이거고 :{}, ", context.getMergedJobDataMap().toString());
             jobLauncher.run(jobLocator.getJob((String) map.get("job")), parameters);
             logger.info("[{}] 배치 잡 완료", (String) map.get("job"));
         } catch (JobExecutionAlreadyRunningException | JobInstanceAlreadyCompleteException | JobParametersInvalidException| NoSuchJobException| JobRestartException | SchedulerException  e) {

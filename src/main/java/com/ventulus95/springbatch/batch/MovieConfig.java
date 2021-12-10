@@ -55,7 +55,7 @@ public class MovieConfig  {
         logger.info("트리거 팩토리 빈");
         CronTriggerFactoryBean factoryBean = new CronTriggerFactoryBean();
         factoryBean.setJobDetail(jobDetailSchedule().getObject());
-        factoryBean.setCronExpression("0/30 * * 1/1 * ? * ");
+        factoryBean.setCronExpression("0 0/5 * 1/1 * ? * ");
         return factoryBean;
     }
 
