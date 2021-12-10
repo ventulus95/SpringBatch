@@ -1,16 +1,19 @@
 package com.ventulus95.springbatch;
 
+import com.ventulus95.springbatch.batch.MoviePartitioner;
 import com.ventulus95.springbatch.dto.kobisResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
+import java.util.Map;
 
 @SpringBootTest
 class SpringBatchApplicationTests {
@@ -43,6 +46,15 @@ class SpringBatchApplicationTests {
         }
 
 //        list.forEach(System.out::println);
+    }
+
+    @Test
+    public void partition(){
+        MoviePartitioner partitioner = new MoviePartitioner();
+        Map<String, ExecutionContext> map =  partitioner.partition(4);
+        for (ExecutionContext context :map.values()){
+            System.out.println(context.toString());
+        }
     }
 
 }

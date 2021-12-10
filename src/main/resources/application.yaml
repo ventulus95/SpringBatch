@@ -9,6 +9,9 @@ spring:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
     username: sa
+    hikari:
+      max-lifetime: 30000
+      maximum-pool-size: 25
   h2:
     console:
       enabled: true
@@ -25,5 +28,5 @@ spring:
 
 
 
-logging.level:
-  org.hibernate.SQL: debug
+#logging.level:
+#  org.hibernate.SQL: debug
