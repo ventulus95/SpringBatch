@@ -15,12 +15,16 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor;
+import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.quartz.CronTriggerFactoryBean;
 import org.springframework.scheduling.quartz.JobDetailFactoryBean;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -30,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -46,7 +51,8 @@ public class MovieConfig  {
     public Job movieScrappingJob(){
         return jobBuilderFactory.get("movieScrappingJob")
                 .preventRestart()
-                .start(movieScrappingJobStep())
+//                .start(movieScrappingJobStep())
+                .start(stepManager())
                 .build();
     }
 
@@ -67,6 +73,41 @@ public class MovieConfig  {
     }
 
     @Bean
+    public TaskExecutorPartitionHandler partitionHandler(){ //파티션 도와주는 핸들러
+        TaskExecutorPartitionHandler handler = new TaskExecutorPartitionHandler();
+        handler.setStep(movieScrappingJobStep()); // 이 스텝을 파티션 시켜버릴 예정
+        handler.setGridSize(20);
+        handler.setTaskExecutor(executor()); //그리고 그 쓰레드풀만든 executor 만들어서 넣어두기
+        return handler;
+    }
+
+    @Bean
+    public TaskExecutor executor(){ //쓰레드 풀 만들어서 비둥기적으로 병렬 처리해야하므로 여기서 생성
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(20);
+        executor.setMaxPoolSize(20);
+        executor.setThreadNamePrefix("partition-thread");
+        executor.setWaitForTasksToCompleteOnShutdown(Boolean.TRUE);
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean
+    public Step stepManager(){
+        return stepBuilderFactory.get("step.manager")
+                .partitioner("movieStep", partitioner())
+                .step(movieScrappingJobStep())
+                .partitionHandler(partitionHandler())
+                .build();
+    }
+
+    @Bean
+    @StepScope
+    public MoviePartitioner partitioner(){
+        return new MoviePartitioner();
+    }
+
+    @Bean
     public JobDetailFactoryBean jobDetailSchedule(){
         JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();
         factoryBean.setJobClass(ScheduledJob.class);
@@ -80,8 +121,9 @@ public class MovieConfig  {
 
     @Bean
     public Step movieScrappingJobStep(){
-        return stepBuilderFactory.get("movieScrapStep").<MovieCompany, MovieCmm>chunk(30)
-                .reader(movieScrapper())
+        return stepBuilderFactory.get("movieScrapStep").<MovieCompany, MovieCmm>chunk(20)
+//                .reader(movieScrapper())
+                .reader(movieScrapper1(null, null))
                 .processor(processor())
                 .writer(insert())
                 .build();
@@ -93,7 +135,7 @@ public class MovieConfig  {
         logger.info("$$$$$$$$$$$ 배치 읽어오기 시작");
         int page = 1;
         List<MovieCompany> list = new ArrayList<>();
-        for (;page<4; page++){
+        for (;page<=700; page++){
             ResponseEntity<kobisResponse> res =client.get().uri("/company/searchCompanyList.json?key=f5eef3421c602c6cb7ea224104795888&itemPerPage=10&curPage="+page)
                     .retrieve().toEntity(kobisResponse.class)
                     .block();
@@ -102,9 +144,28 @@ public class MovieConfig  {
         return new ListItemReader<>(list);
     }
 
+    @Bean
+    @StepScope
+    public ListItemReader<MovieCompany> movieScrapper1(
+            @Value("#{stepExecutionContext[start]}") Integer start,
+            @Value("#{stepExecutionContext[end]}") Integer end
+    ){
+//        logger.info("$$$$$$$$$$$ 배치 읽어오기 시작 start: [{}] end: [{}]", start, end);
+        int page = start;
+        List<MovieCompany> list = new ArrayList<>();
+        while(page<=end){
+            ResponseEntity<kobisResponse> res =client.get().uri("/company/searchCompanyList.json?key=f5eef3421c602c6cb7ea224104795888&itemPerPage=10&curPage="+page)
+                    .retrieve().toEntity(kobisResponse.class)
+                    .block();
+            list.addAll(res.getBody().companyListResult.getCompanyList());
+            page++;
+        }
+        return new ListItemReader<>(list);
+    }
+
     public ItemProcessor<MovieCompany, MovieCmm> processor(){
         return item -> {
-            logger.info("~~~~~~~~~~~~~~~ 배치 프로세스 진행중!!!");
+//            logger.info("~~~~~~~~~~~~~~~ 배치 프로세스 진행중!!!");
             return item.toEntity();
         };
     }
