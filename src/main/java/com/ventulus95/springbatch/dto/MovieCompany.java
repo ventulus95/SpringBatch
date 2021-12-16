@@ -1,7 +1,6 @@
 package com.ventulus95.springbatch.dto;
 
-import com.ventulus95.springbatch.MovieCmm;
-import lombok.Builder;
+import com.ventulus95.springbatch.model.MovieCmm;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;

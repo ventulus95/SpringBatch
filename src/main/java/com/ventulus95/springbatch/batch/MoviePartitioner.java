@@ -7,15 +7,14 @@ import org.springframework.batch.item.ExecutionContext;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 @Slf4j
-@RequiredArgsConstructor //나는 분할하는 역할일세 허허
+@RequiredArgsConstructor //여기서 시작, 끝 범위 지정하는 역할.
 public class MoviePartitioner implements Partitioner {
 
     @Override
     public Map<String, ExecutionContext> partition(int gridSize) {
-        int total = 7000;//new Random().nextInt(10, 80);
+        int total = 7000;
         Map<String, ExecutionContext> map = new HashMap<>(gridSize);
         int start = 1;
         int page = 10;
@@ -25,11 +24,8 @@ public class MoviePartitioner implements Partitioner {
             map.put("partition"+start, context);
             context.putInt("start", start/page);
             start+=range;
-            log.info("end >>>> {} ", start);
             context.putInt("end", start/page);
         }
-        log.info("total >>>> {} ", total);
-
         return map;
     }
 }

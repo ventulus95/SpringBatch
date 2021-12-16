@@ -1,4 +1,4 @@
-package com.ventulus95.springbatch;
+package com.ventulus95.springbatch.model;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
