@@ -42,6 +42,7 @@ public class MovieBatchConfig {
     private final EntityManagerFactory managerFactory;
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
+    private final Step TEST_JOB_step;
 
     @Bean
     public Job movieScrappingJob(){
@@ -49,6 +50,7 @@ public class MovieBatchConfig {
                 .preventRestart()
 //                .start(movieScrappingJobStep())
                 .start(stepManager())
+                .next(TEST_JOB_step)
                 .build();
     }
 

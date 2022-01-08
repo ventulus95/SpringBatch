@@ -27,6 +27,7 @@ public class TestController {
     private final JobLauncher jobLauncher;
     private final JobExplorer jobExplorer;
     private final Job movieScrappingJob;
+    private final Job TEST_JOB;
 
     @GetMapping("/batch")
     public ResponseEntity<String> batch() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException, NoSuchJobException {
@@ -39,6 +40,20 @@ public class TestController {
         JobParameters parameters = new JobParametersBuilder().addString("JobDate", LocalDateTime.now().toString()).toJobParameters(); //파라미터 생성후 => 파라미터를 거는게 더 안전하다. 파라미터가 키값이 되서 작동하기때문
 //        JobParameters parameters = new JobParametersBuilder().toJobParameters();
         jobLauncher.run(movieScrappingJob, parameters); // 잡런처를 통해서 특정 잡 실행.
+        return ResponseEntity.ok("배치가 작동합니다. 실행중...");
+    }
+
+    @GetMapping("/batch1")
+    public ResponseEntity<String> batch1() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException, NoSuchJobException {
+        Set<JobExecution> set = jobExplorer.findRunningJobExecutions("TEST_JOB"); // 잡이 실행했는지를 판단.
+        if (set.size()>0) {
+            log.warn(">>>> Batch is running~~ wait a minutes !!! ");
+            return ResponseEntity.badRequest().body("배치잡 실행중");
+        }
+        log.info(">>>> Batch FOUND ");
+        JobParameters parameters = new JobParametersBuilder().addString("JobDate", LocalDateTime.now().toString()).toJobParameters(); //파라미터 생성후 => 파라미터를 거는게 더 안전하다. 파라미터가 키값이 되서 작동하기때문
+        //        JobParameters parameters = new JobParametersBuilder().toJobParameters();
+        jobLauncher.run(TEST_JOB, parameters); // 잡런처를 통해서 특정 잡 실행.
         return ResponseEntity.ok("배치가 작동합니다. 실행중...");
     }
 }
